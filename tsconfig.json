@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"target": "ES2018",
+		"module": "commonjs",
+		"allowJs": true,
+		"outDir": "./dist/",
+		"rootDir": "./api/",
+		"strict": true,
+		"noImplicitAny": false,
+		"types": ["node"],
+		"esModuleInterop": true
+	},
+	"exclude": ["node_modules", "dist", "gulpfile.js", "webapp"]
+}
