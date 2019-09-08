@@ -6,10 +6,13 @@ import globby from 'globby'
 import path from 'path'
 import bunyan from 'bunyan'
 import { Config } from './interfaces'
+import { Sequelize } from 'sequelize-typescript'
 
 export class App {
 	AUTOLOAD_PATHS = [
 		`models/*.js`,
+		`components/*.js`,
+		`components/*/index.js`,
 		`middleware/**/*.js`,
 		`controllers/**/*.js`
 	]
@@ -21,6 +24,9 @@ export class App {
 		name: 'subtekstoj.net'
 	})
 	config!: Config
+
+	// Set by components/database.ts
+	sequelize!: Sequelize
 
 	constructor() {
 		this.createServer()
@@ -77,7 +83,7 @@ export class App {
 		for (let hookName of this.AUTOLOAD_HOOKS) {
 			for (let mod of loadedModules) {
 				if (hookName in mod) {
-					await Promise.resolve(mod.initialize()).catch((err) => {
+					await Promise.resolve(mod[hookName]()).catch((err) => {
 						this.logger.warn(
 							{ err },
 							`Hook ${hookName} execution error`

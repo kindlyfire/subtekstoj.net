@@ -8,7 +8,9 @@
 		"strict": true,
 		"noImplicitAny": false,
 		"types": ["node"],
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true
 	},
 	"exclude": ["node_modules", "dist", "gulpfile.js", "webapp"]
 }
