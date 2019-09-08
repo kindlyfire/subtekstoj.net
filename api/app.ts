@@ -1,6 +1,7 @@
 import Koa from 'koa'
 import KoaRouter from 'koa-router'
-import KoaSession from 'koa-session'
+import koaSession from 'koa-session'
+import koaBody from 'koa-body'
 import globby from 'globby'
 import path from 'path'
 import bunyan from 'bunyan'
@@ -19,11 +20,37 @@ export class App {
 	logger = bunyan.createLogger({
 		name: 'subtekstoj.net'
 	})
+	config!: Config
 
-	constructor() {}
+	constructor() {
+		this.createServer()
+	}
 
 	async initialize(config: Config) {
+		this.config = config
+
 		await this.autoload()
+
+		this.koa.listen(parseInt(config.PORT))
+	}
+
+	/**
+	 * Create the Koa server and router
+	 */
+	private createServer() {
+		this.koa.use(koaBody())
+		this.koa.use(
+			koaSession(
+				{
+					maxAge: 86400000,
+					signed: false,
+					renew: true
+				},
+				this.koa
+			)
+		)
+		this.koa.use(this.router.routes())
+		this.koa.use(this.router.allowedMethods())
 	}
 
 	/**
