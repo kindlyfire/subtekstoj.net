@@ -1,6 +1,8 @@
 import { Sequelize } from 'sequelize-typescript'
 import { app } from '../app'
 import cuid from 'cuid'
+import { DbSubtitle } from '../models/Subtitle'
+import { DbUser } from '../models/User'
 
 /**
  * Load the database and set it on the app instance. Also adds the hooks for the
@@ -34,8 +36,8 @@ export async function beforeInitialize() {
     })
 
     await app.sequelize.authenticate()
-}
 
-export async function afterInitialize() {
+    await app.sequelize.addModels([DbSubtitle, DbUser])
+
     await app.sequelize.sync({ force: true })
 }
