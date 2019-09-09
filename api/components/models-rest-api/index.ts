@@ -1,7 +1,7 @@
 import { DbSubtitle } from '../../models/Subtitle'
 import { DbUser } from '../../models/User'
 import { app } from '../../app'
-import { exportPublicModel } from './utils'
+import { exportPublicModel, requestParamsToQuery } from './utils'
 import { BaseModel } from '../../models/BaseModel'
 
 export function initialize() {
@@ -38,12 +38,14 @@ export function initialize() {
     app.router.get('/api/resources/:modelName', async ctx => {
         const model: typeof BaseModel = ctx.state.model
 
-        const instances = await model.findAll({
-            limit: 100
-        })
+        const options = requestParamsToQuery(ctx.request.query)
+
+        const instances = await model.findAll(options)
+        const total = await model.count(options)
 
         ctx.body = {
             status: 200,
+            total,
             data: exportPublicModel(model, instances, ctx.state.user)
         }
     })
