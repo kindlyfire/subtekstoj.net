@@ -2,7 +2,7 @@ import { Model, Table, Column, HasMany } from 'sequelize-typescript'
 import { BaseModel } from './BaseModel'
 import { DataTypes } from 'sequelize'
 import { DbSubtitle } from './Subtitle'
-import { ApiModelSettings } from '../interfaces'
+import { APIModelSettings } from '../interfaces'
 
 @Table({
     modelName: 'User',
@@ -25,7 +25,9 @@ export class DbUser extends BaseModel<DbUser> {
 
     // API
 
-    static apiSettings: ApiModelSettings<DbUser> = {
+    static apiSettings: APIModelSettings<DbUser> = {
+        disallowedRequests: ['list'],
+
         getAllowedProps(inst, user) {
             return ['name', 'email']
         }

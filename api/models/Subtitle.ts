@@ -3,7 +3,7 @@ import { BaseModel } from './BaseModel'
 import { app } from '../app'
 import { DataTypes } from 'sequelize'
 import { DbUser } from './User'
-import { ApiModelSettings } from '../interfaces'
+import { APIModelSettings } from '../interfaces'
 
 @Table({
     modelName: 'Subtitle',
@@ -25,7 +25,9 @@ export class DbSubtitle extends BaseModel<DbSubtitle> {
     @BelongsTo(() => DbUser)
     public uploader!: DbUser
 
-    static apiSettings: ApiModelSettings<DbSubtitle> = {
+    static apiSettings: APIModelSettings<DbSubtitle> = {
+        disallowedRequests: [],
+
         getAllowedProps(inst, user) {
             return true
         }

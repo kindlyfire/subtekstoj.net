@@ -5,6 +5,14 @@ export interface Config {
     PORT: string
 }
 
-interface ApiModelSettings<T> {
-    getAllowedProps(inst: T, user?: DbUser): string[] | true
+type APIRequestType = 'list' | 'create' | 'read' | 'update' | 'delete'
+
+interface APIModelSettings<T> {
+    disallowedRequests: APIRequestType[]
+
+    getAllowedProps(
+        inst: T,
+        user: DbUser | undefined,
+        isDeep: boolean
+    ): string[] | true
 }

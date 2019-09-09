@@ -1,7 +1,12 @@
 import { DbSubtitle } from '../../models/Subtitle'
 import { DbUser } from '../../models/User'
 import { app } from '../../app'
-import { exportPublicModel, requestParamsToQuery } from './utils'
+import {
+    exportPublicModel,
+    requestParamsToQuery,
+    APIError,
+    checkForbiddenMethodsMiddleware
+} from './utils'
 import { BaseModel } from '../../models/BaseModel'
 
 export function initialize() {
@@ -26,8 +31,11 @@ export function initialize() {
                 console.log(e)
 
                 ctx.body = {
-                    status: 500,
-                    error: 'An internal error occured'
+                    status: e instanceof APIError ? e.code : 500,
+                    error:
+                        e instanceof APIError
+                            ? e.message
+                            : 'An internal error occured'
                 }
             }
 
@@ -35,18 +43,22 @@ export function initialize() {
         }
     })
 
-    app.router.get('/api/resources/:modelName', async ctx => {
-        const model: typeof BaseModel = ctx.state.model
+    app.router.get(
+        '/api/resources/:modelName',
+        checkForbiddenMethodsMiddleware('list'),
+        async ctx => {
+            const model: typeof BaseModel = ctx.state.model
 
-        const options = requestParamsToQuery(ctx.request.query)
+            const options = requestParamsToQuery(ctx.request.query)
 
-        const instances = await model.findAll(options)
-        const total = await model.count(options)
+            const instances = await model.findAll(options)
+            const total = await model.count(options)
 
-        ctx.body = {
-            status: 200,
-            total,
-            data: exportPublicModel(model, instances, ctx.state.user)
+            ctx.body = {
+                status: 200,
+                total,
+                data: exportPublicModel(model, instances, ctx.state.user)
+            }
         }
-    })
+    )
 }

@@ -1,6 +1,8 @@
 import { BaseModel } from '../../models/BaseModel'
 import { DbUser } from '../../models/User'
 import { FindOptions } from 'sequelize'
+import { Middleware } from 'koa-compose'
+import { APIRequestType } from '../../interfaces'
 
 /**
  * Create an array of object from a model or an array of models. Will only
@@ -10,7 +12,8 @@ import { FindOptions } from 'sequelize'
 export function exportPublicModel(
     ctor: typeof BaseModel,
     models: BaseModel<any> | BaseModel<any>[],
-    user?: DbUser
+    user?: DbUser,
+    isDeep = false
 ) {
     if (!Array.isArray(models)) {
         models = [models]
@@ -20,7 +23,7 @@ export function exportPublicModel(
 
     for (let model of models) {
         const raw = model.get()
-        let props = ctor.apiSettings.getAllowedProps(model, user)
+        let props = ctor.apiSettings.getAllowedProps(model, user, isDeep)
 
         if (props === true) props = Object.keys(raw)
 
@@ -35,7 +38,8 @@ export function exportPublicModel(
                 obj[prop] = exportPublicModel(
                     (model[prop] as any).constructor,
                     model[prop],
-                    user
+                    user,
+                    true
                 )
             } else {
                 obj[prop] = model[prop]
@@ -91,4 +95,28 @@ export function requestParamsToQuery(query: any): FindOptions {
     }
 
     return options
+}
+
+export class APIError extends Error {
+    isAPIError = true
+    code: number
+
+    constructor(msg, code = 500) {
+        super(msg)
+
+        this.code = code
+    }
+}
+
+export function checkForbiddenMethodsMiddleware(
+    type: APIRequestType
+): Middleware<any> {
+    return (ctx, next) => {
+        const model: typeof BaseModel = ctx.state.model
+
+        if (model.apiSettings.disallowedRequests.includes(type))
+            throw new APIError('Request type is disallowed.', 403)
+
+        return next()
+    }
 }

@@ -6,7 +6,7 @@ import {
     Model
 } from 'sequelize-typescript'
 import { DataTypes } from 'sequelize'
-import { ApiModelSettings } from '../interfaces'
+import { APIModelSettings } from '../interfaces'
 
 /**
  * Base model containing attributes common between all resources
@@ -24,7 +24,9 @@ export class BaseModel<T> extends Model<T> {
     @Column
     public readonly updatedAt!: Date
 
-    static apiSettings: ApiModelSettings<BaseModel<any>> = {
+    static apiSettings: APIModelSettings<BaseModel<any>> = {
+        disallowedRequests: [],
+
         getAllowedProps(inst, user) {
             return true
         }
