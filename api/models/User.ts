@@ -34,9 +34,14 @@ export class DbUser extends BaseModel<DbUser> {
     }
 }
 
-export function initialize() {
-    DbUser.create({
+export async function initialize() {
+    const user = await DbUser.create({
         name: 'Tijl Van den Brugghen',
         email: `drop@tijlvdb.me`
+    })
+
+    DbSubtitle.create({
+        fileName: 'test.rst',
+        uploaderId: user.id
     })
 }
