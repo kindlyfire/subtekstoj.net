@@ -22,20 +22,9 @@ export function exportPublicModel(
     let res: any[] = []
 
     for (let model of models) {
-        const raw = model.get()
-        let props = ctor.apiSettings.getAllowedProps
-            ? ctor.apiSettings.getAllowedProps(model, user, isDeep)
-            : true
-
-        if (props === true) props = Object.keys(raw)
-
-        props = ['id', 'createdAt', 'updatedAt', ...props].filter(
-            prop => prop in raw
-        )
-
         let obj: any = {}
 
-        for (let prop of props) {
+        for (let prop of getAllowedProps(ctor, model, user, isDeep)) {
             if (isModels(model[prop])) {
                 obj[prop] = exportPublicModel(
                     (model[prop] as any).constructor,
@@ -54,6 +43,26 @@ export function exportPublicModel(
     return res
 }
 
+function getAllowedProps(
+    ctor: typeof BaseModel,
+    model: BaseModel<any>,
+    user?: DbUser,
+    isDeep = false
+) {
+    const raw = model.get()
+    let props = ctor.apiSettings.getAllowedProps
+        ? ctor.apiSettings.getAllowedProps(model, user, isDeep)
+        : true
+
+    if (props === true) props = Object.keys(raw)
+
+    props = ['id', 'createdAt', 'updatedAt', ...props].filter(
+        prop => prop in raw
+    )
+
+    return props
+}
+
 /**
  * Check if `obj` is a model or an array of models.
  *
@@ -70,33 +79,39 @@ function isModels(obj: any) {
 export function requestParamsToQuery(query: any): FindOptions {
     const options: FindOptions = {}
 
-    if (query.limit) {
-        let limit = parseInt(query.limit)
-
-        if (!limit || limit < 0) limit = 10
-        if (limit > 100) limit = 100
-
-        options.limit = limit
-    }
-
-    if (query.offset) {
-        let offset = parseInt(query.offset)
-
-        if (!offset || offset < 0) offset = 0
-
-        options.offset = offset
-    }
-
-    if (query.order) {
-        let parts = query.order.split(',')
-
-        if (!['ASC', 'DESC'].includes((parts[1] + '').toUpperCase()))
-            parts[1] = 'DESC'
-
-        options.order = [[parts[0], parts[1].toUpperCase()]]
-    }
+    options.limit = parseRequestLimit(query.limit)
+    options.offset = parseRequestOffset(query.offset)
+    query.order = parseRequestOrder(query.order)
 
     return options
+}
+
+function parseRequestLimit(str: string) {
+    let limit = parseInt(str)
+
+    if (!limit || limit < 0) limit = 10
+    if (limit > 100) limit = 100
+
+    return limit
+}
+
+function parseRequestOffset(str: string) {
+    let offset = parseInt(str)
+
+    if (!offset || offset < 0) offset = 0
+
+    return offset
+}
+
+function parseRequestOrder(str: string) {
+    if (!str) return ['id', 'ASC']
+
+    let parts = str.split(',')
+
+    if (!['ASC', 'DESC'].includes((parts[1] + '').toUpperCase()))
+        parts[1] = 'DESC'
+
+    return [[parts[0], parts[1].toUpperCase()]]
 }
 
 export class APIError extends Error {
@@ -110,6 +125,10 @@ export class APIError extends Error {
     }
 }
 
+/**
+ * Middleware generator to check that a certain API request type has not been
+ * blocked on a model.
+ */
 export function checkForbiddenMethodsMiddleware(
     type: APIRequestType
 ): Middleware<any> {
@@ -123,6 +142,9 @@ export function checkForbiddenMethodsMiddleware(
     }
 }
 
+/**
+ * Deletes potentially sensitive information from a Sequelize error array
+ */
 export function exportPublicSequelizeErrors(errors: any) {
     for (let err of errors) {
         delete err.instance
@@ -130,4 +152,27 @@ export function exportPublicSequelizeErrors(errors: any) {
     }
 
     return errors
+}
+
+/**
+ * Transforms an error object into an object that can be returned by the API
+ */
+export function errorToBody(e: any) {
+    if (e instanceof APIError) {
+        return {
+            status: e.code,
+            error: e.message
+        }
+    } else if (Array.isArray(e.errors)) {
+        return {
+            status: 400,
+            error: 'Resource validation failed',
+            details: exportPublicSequelizeErrors(e.errors)
+        }
+    } else {
+        return {
+            status: 500,
+            error: 'An internal error occured'
+        }
+    }
 }

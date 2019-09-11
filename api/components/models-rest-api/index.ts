@@ -6,13 +6,20 @@ import {
     requestParamsToQuery,
     APIError,
     checkForbiddenMethodsMiddleware,
-    exportPublicSequelizeErrors
+    exportPublicSequelizeErrors,
+    errorToBody
 } from './utils'
 import { BaseModel } from '../../models/BaseModel'
 
 export function initialize() {
     const models: Array<typeof BaseModel> = [DbSubtitle, DbUser]
 
+    addMiddleware(models)
+    addListingHandler()
+    addCreationHandler()
+}
+
+function addMiddleware(models: Array<typeof BaseModel>) {
     app.router.use('/api/resources/:modelName', async (ctx, next) => {
         const model = models.find(
             model => model.tableName === ctx.params.modelName
@@ -30,30 +37,15 @@ export function initialize() {
                 await next()
             } catch (e) {
                 console.log(e)
-
-                if (e instanceof APIError) {
-                    ctx.body = {
-                        status: e.code,
-                        error: e.message
-                    }
-                } else if (Array.isArray(e.errors)) {
-                    ctx.body = {
-                        status: 400,
-                        error: 'Resource validation failed',
-                        details: exportPublicSequelizeErrors(e.errors)
-                    }
-                } else {
-                    ctx.body = {
-                        status: 500,
-                        error: 'An internal error occured'
-                    }
-                }
+                ctx.body = errorToBody(e)
             }
 
             if (ctx.body.status) ctx.status = ctx.body.status
         }
     })
+}
 
+function addListingHandler() {
     app.router.get(
         '/api/resources/:modelName',
         checkForbiddenMethodsMiddleware('list'),
@@ -72,7 +64,9 @@ export function initialize() {
             }
         }
     )
+}
 
+function addCreationHandler() {
     app.router.post(
         '/api/resources/:modelName',
         checkForbiddenMethodsMiddleware('create'),

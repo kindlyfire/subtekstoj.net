@@ -9,91 +9,99 @@ import { Config } from './interfaces'
 import { Sequelize } from 'sequelize-typescript'
 
 export class App {
-	AUTOLOAD_PATHS = [
-		`models/*.js`,
-		`components/*.js`,
-		`components/*/index.js`,
-		`middleware/**/*.js`,
-		`controllers/**/*.js`
-	]
-	AUTOLOAD_HOOKS = [`beforeInitialize`, `initialize`, `afterInitialize`]
+    AUTOLOAD_PATHS = [
+        `models/*.js`,
+        `components/*.js`,
+        `components/*/index.js`,
+        `middleware/**/*.js`,
+        `controllers/**/*.js`
+    ]
+    AUTOLOAD_HOOKS = [`beforeInitialize`, `initialize`, `afterInitialize`]
 
-	koa = new Koa()
-	router = new KoaRouter()
-	logger = bunyan.createLogger({
-		name: 'subtekstoj.net'
-	})
-	config!: Config
+    koa = new Koa()
+    router = new KoaRouter()
+    logger = bunyan.createLogger({
+        name: 'subtekstoj.net'
+    })
+    config!: Config
 
-	// Set by components/database.ts
-	sequelize!: Sequelize
+    // Set by components/database.ts
+    sequelize!: Sequelize
 
-	constructor() {
-		this.createServer()
-	}
+    loadedModules: any[] = []
 
-	async initialize(config: Config) {
-		this.config = config
+    constructor() {
+        this.createServer()
+    }
 
-		await this.autoload()
+    async initialize(config: Config) {
+        this.config = config
 
-		this.koa.listen(parseInt(config.PORT))
-	}
+        await this.autoload()
 
-	/**
-	 * Create the Koa server and router
-	 */
-	private createServer() {
-		this.koa.use(koaBody())
-		this.koa.use(
-			koaSession(
-				{
-					maxAge: 86400000,
-					signed: false,
-					renew: true
-				},
-				this.koa
-			)
-		)
-		this.koa.use(this.router.routes())
-		this.koa.use(this.router.allowedMethods())
-	}
+        this.koa.listen(parseInt(config.PORT))
+    }
 
-	/**
-	 * Function responsible of autoloading models, middleware, controllers
-	 */
-	private async autoload() {
-		const loadedModules: any[] = []
+    /**
+     * Create the Koa server and router
+     */
+    private createServer() {
+        this.koa.use(koaBody())
+        this.koa.use(
+            koaSession(
+                {
+                    maxAge: 86400000,
+                    signed: false,
+                    renew: true
+                },
+                this.koa
+            )
+        )
+        this.koa.use(this.router.routes())
+        this.koa.use(this.router.allowedMethods())
+    }
 
-		for (let p of this.AUTOLOAD_PATHS) {
-			const files = await globby(
-				path.join(__dirname, p).replace(/\\/g, '/')
-			)
+    /**
+     * Function responsible of autoloading models, middleware, controllers
+     */
+    private async autoload() {
+        const loadedModules: any[] = []
 
-			for (let file of files) {
-				try {
-					loadedModules.push(require(file))
-				} catch (err) {
-					this.logger.warn({ err, file }, 'Failed to autoload file')
-					console.error(err)
-				}
-			}
-		}
+        for (let p of this.AUTOLOAD_PATHS) {
+            const files = await globby(
+                path.join(__dirname, p).replace(/\\/g, '/')
+            )
 
-		for (let hookName of this.AUTOLOAD_HOOKS) {
-			for (let mod of loadedModules) {
-				if (hookName in mod) {
-					await Promise.resolve(mod[hookName]()).catch((err) => {
-						this.logger.warn(
-							{ err },
-							`Hook ${hookName} execution error`
-						)
-						console.error(err)
-					})
-				}
-			}
-		}
-	}
+            for (let file of files) {
+                try {
+                    loadedModules.push(require(file))
+                } catch (err) {
+                    this.logger.warn({ err, file }, 'Failed to autoload file')
+                    console.error(err)
+                }
+            }
+        }
+
+        this.loadedModules = loadedModules
+
+        for (let hookName of this.AUTOLOAD_HOOKS) {
+            await this.executeModuleHook(hookName)
+        }
+    }
+
+    private async executeModuleHook(hookName: string) {
+        for (let mod of this.loadedModules) {
+            if (hookName in mod) {
+                await Promise.resolve(mod[hookName]()).catch(err => {
+                    this.logger.warn(
+                        { err },
+                        `Hook ${hookName} execution error`
+                    )
+                    console.error(err)
+                })
+            }
+        }
+    }
 }
 
 export const app = new App()
