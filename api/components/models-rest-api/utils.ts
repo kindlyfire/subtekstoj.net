@@ -120,3 +120,12 @@ export function checkForbiddenMethodsMiddleware(
         return next()
     }
 }
+
+export function exportPublicSequelizeErrors(errors: any) {
+    for (let err of errors) {
+        delete err.instance
+        delete err.original
+    }
+
+    return errors
+}

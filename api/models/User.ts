@@ -27,7 +27,7 @@ export class DbUser extends BaseModel<DbUser> {
 
     static get apiSettings(): APIModelSettings<DbUser> {
         return {
-            disallowedRequests: ['list'],
+            disallowedRequests: ['list', 'delete'],
 
             getAllowedProps(inst, user) {
                 return ['name', 'email']
@@ -43,7 +43,8 @@ export async function initialize() {
     })
 
     DbSubtitle.create({
-        fileName: 'test.rst',
+        fileName: 'tttttttttttttt',
+        fileHash: 'Mé go!',
         uploaderId: user.id
     })
 }
