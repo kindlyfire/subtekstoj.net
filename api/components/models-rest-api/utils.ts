@@ -23,7 +23,9 @@ export function exportPublicModel(
 
     for (let model of models) {
         const raw = model.get()
-        let props = ctor.apiSettings.getAllowedProps(model, user, isDeep)
+        let props = ctor.apiSettings.getAllowedProps
+            ? ctor.apiSettings.getAllowedProps(model, user, isDeep)
+            : true
 
         if (props === true) props = Object.keys(raw)
 
