@@ -25,11 +25,13 @@ export class DbSubtitle extends BaseModel<DbSubtitle> {
     @BelongsTo(() => DbUser)
     public uploader!: DbUser
 
-    static apiSettings: APIModelSettings<DbSubtitle> = {
-        disallowedRequests: [],
+    static get apiSettings(): APIModelSettings<DbSubtitle> {
+        return {
+            disallowedRequests: [],
 
-        getAllowedProps(inst, user) {
-            return true
+            getAllowedProps(inst, user) {
+                return true
+            }
         }
     }
 }

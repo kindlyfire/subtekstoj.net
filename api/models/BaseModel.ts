@@ -24,11 +24,13 @@ export class BaseModel<T> extends Model<T> {
     @Column
     public readonly updatedAt!: Date
 
-    static apiSettings: APIModelSettings<BaseModel<any>> = {
-        disallowedRequests: [],
+    static get apiSettings(): APIModelSettings<BaseModel<any>> {
+        return {
+            disallowedRequests: [],
 
-        getAllowedProps(inst, user) {
-            return true
+            getAllowedProps(inst, user) {
+                return true
+            }
         }
     }
 }

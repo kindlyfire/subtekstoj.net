@@ -25,11 +25,13 @@ export class DbUser extends BaseModel<DbUser> {
 
     // API
 
-    static apiSettings: APIModelSettings<DbUser> = {
-        disallowedRequests: ['list'],
+    static get apiSettings(): APIModelSettings<DbUser> {
+        return {
+            disallowedRequests: ['list'],
 
-        getAllowedProps(inst, user) {
-            return ['name', 'email']
+            getAllowedProps(inst, user) {
+                return ['name', 'email']
+            }
         }
     }
 }
