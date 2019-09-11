@@ -10,11 +10,23 @@ import { APIModelSettings } from '../interfaces'
     tableName: 'subtitles'
 })
 export class DbSubtitle extends BaseModel<DbSubtitle> {
-    @Column(DataTypes.STRING)
+    @Column({
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            len: [10, 20]
+        }
+    })
     public fileName!: string
 
-    @Column(DataTypes.STRING)
+    @Column({
+        type: DataTypes.STRING,
+        allowNull: false
+    })
     public fileHash!: string
+
+    @Column
+    public downloads!: number
 
     // ASSOCIATIONS
 
@@ -24,6 +36,8 @@ export class DbSubtitle extends BaseModel<DbSubtitle> {
 
     @BelongsTo(() => DbUser)
     public uploader!: DbUser
+
+    // API
 
     static get apiSettings(): APIModelSettings<DbSubtitle> {
         return {

@@ -9,13 +9,28 @@ import { APIModelSettings } from '../interfaces'
     tableName: 'users'
 })
 export class DbUser extends BaseModel<DbUser> {
-    @Column(DataTypes.STRING)
+    @Column({
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            len: [3, 32]
+        }
+    })
     public name!: string
 
-    @Column(DataTypes.STRING)
+    @Column({
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            isEmail: true
+        }
+    })
     public email!: string
 
-    @Column(DataTypes.STRING)
+    @Column({
+        type: DataTypes.STRING(60),
+        allowNull: false
+    })
     public hashedPassword!: string
 
     // ASSOCIATIONS
