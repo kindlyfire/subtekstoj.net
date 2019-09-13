@@ -11,10 +11,10 @@ import { APIModelSettings } from '../interfaces'
 })
 export class DbSubtitle extends BaseModel<DbSubtitle> {
     @Column({
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(64),
         allowNull: false,
         validate: {
-            len: [10, 20]
+            len: [7, 64]
         }
     })
     public fileName!: string
