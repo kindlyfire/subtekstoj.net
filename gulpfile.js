@@ -6,37 +6,37 @@ const sourcemaps = require('gulp-sourcemaps')
 const tsProject = ts.createProject('tsconfig.json')
 
 function typescript() {
-	return gulp
-		.src(['api/**/*.ts'])
-		.pipe(sourcemaps.init())
-		.pipe(tsProject())
-		.pipe(
-			sourcemaps.write('.', {
-				includeContent: false,
-				sourceRoot: 'api/'
-			})
-		)
-		.pipe(gulp.dest('dist/'))
+    return gulp
+        .src(['app/**/*.ts'])
+        .pipe(sourcemaps.init())
+        .pipe(tsProject())
+        .pipe(
+            sourcemaps.write('.', {
+                includeContent: false,
+                sourceRoot: 'app/'
+            })
+        )
+        .pipe(gulp.dest('dist/'))
 }
 
 function run(done) {
-	nodemon({
-		script: 'dist/index.js',
-		ext: 'js',
-		env: { NODE_ENV: 'development' },
-		done,
-		delay: 1000
-	})
+    nodemon({
+        script: 'dist/index.js',
+        ext: 'js',
+        env: { NODE_ENV: 'development' },
+        done,
+        delay: 1000
+    })
 }
 
 function watch() {
-	gulp.watch(
-		['api/**/*.ts'],
-		{
-			ignoreInitial: false
-		},
-		typescript
-	)
+    gulp.watch(
+        ['app/**/*.ts'],
+        {
+            ignoreInitial: false
+        },
+        typescript
+    )
 }
 
 exports.typescript = typescript
