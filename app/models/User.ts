@@ -2,7 +2,6 @@ import { Table, Column, HasMany } from 'sequelize-typescript'
 import { BaseModel } from './BaseModel'
 import { DataTypes } from 'sequelize'
 import { DbSubtitle } from './Subtitle'
-import { APIModelSettings } from '../interfaces'
 
 @Table({
     modelName: 'User',
@@ -37,18 +36,6 @@ export class DbUser extends BaseModel<DbUser> {
 
     @HasMany(() => DbSubtitle)
     public subtitles!: DbSubtitle[]
-
-    // API
-
-    static get apiSettings(): APIModelSettings<DbUser> {
-        return {
-            disallowedRequests: ['list', 'delete'],
-
-            getAllowedProps(inst, user) {
-                return ['name', 'email']
-            }
-        }
-    }
 }
 
 export async function initialize() {
