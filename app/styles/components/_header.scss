@@ -1,0 +1,30 @@
+.header {
+    background-color: rgb(0, 128, 0);
+    color: #f9f9f9;
+    border-bottom: 4px solid rgb(0, 100, 0);
+    padding: 0 10px;
+
+    .header-inner {
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+    }
+
+    .header-brand {
+        font-size: 2em;
+        margin-right: 15px;
+        text-decoration: none;
+        color: #f9f9f9;
+    }
+
+    .header-link {
+        padding: 10px;
+        color: #ddd;
+        text-decoration: none;
+        font-size: 18px;
+
+        &:hover {
+            color: #f9f9f9;
+        }
+    }
+}
