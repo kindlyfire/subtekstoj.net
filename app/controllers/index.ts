@@ -1,3 +1,7 @@
+import { app } from '../app'
+
 export function initialize() {
-	console.log('Controller initialized')
+    app.router.get('/', async ctx => {
+        return ctx.render('pages/index')
+    })
 }

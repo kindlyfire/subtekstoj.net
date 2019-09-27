@@ -3,6 +3,9 @@ const ts = require('gulp-typescript')
 const nodemon = require('gulp-nodemon')
 const sourcemaps = require('gulp-sourcemaps')
 
+const sass = require('gulp-sass')
+sass.compiler = require('node-sass')
+
 const tsProject = ts.createProject('tsconfig.json')
 
 function typescript() {
@@ -19,6 +22,21 @@ function typescript() {
         .pipe(gulp.dest('dist/'))
 }
 
+function copyViews() {
+    return gulp.src(['app/views/**/*.pug']).pipe(gulp.dest('dist/views/'))
+}
+
+function copyAssets() {
+    return gulp.src(['app/public/**/*']).pipe(gulp.dest('dist/public/'))
+}
+
+function styles() {
+    return gulp
+        .src('app/styles/**/*.scss')
+        .pipe(sass().on('error', sass.logError))
+        .pipe(gulp.dest('dist/public/css/'))
+}
+
 function run(done) {
     nodemon({
         script: 'dist/index.js',
@@ -30,16 +48,22 @@ function run(done) {
 }
 
 function watch() {
-    gulp.watch(
-        ['app/**/*.ts'],
-        {
-            ignoreInitial: false
-        },
-        typescript
-    )
+    const watchOptions = {
+        ignoreInitial: false
+    }
+
+    gulp.watch(['app/**/*.ts'], watchOptions, typescript)
+    gulp.watch(['app/styles/**/*.scss'], watchOptions, styles)
+    gulp.watch(['app/public/**/*'], watchOptions, copyAssets)
+    gulp.watch(['app/views/**/*.pug'], watchOptions, copyViews)
 }
 
 exports.typescript = typescript
 exports.watch = watch
 exports.run = run
-exports.default = gulp.parallel(typescript)
+exports.copyViews = copyViews
+exports.copyAssets = copyAssets
+exports.styles = styles
+
+exports.copy = gulp.parallel(copyViews, copyAssets)
+exports.default = gulp.parallel(typescript, copyViews, styles, copyAssets)

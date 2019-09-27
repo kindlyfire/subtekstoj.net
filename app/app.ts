@@ -2,6 +2,9 @@ import Koa from 'koa'
 import KoaRouter from 'koa-router'
 import koaSession from 'koa-session'
 import koaBody from 'koa-body'
+import koaViews from 'koa-views'
+import koaMount from 'koa-mount'
+import koaStatic from 'koa-static'
 import globby from 'globby'
 import path from 'path'
 import bunyan from 'bunyan'
@@ -9,14 +12,18 @@ import { Config } from './interfaces'
 import { Sequelize } from 'sequelize-typescript'
 
 export class App {
-    AUTOLOAD_PATHS = [
+    private AUTOLOAD_PATHS = [
         `models/*.js`,
         `components/*.js`,
         `components/*/index.js`,
         `middleware/**/*.js`,
         `controllers/**/*.js`
     ]
-    AUTOLOAD_HOOKS = [`beforeInitialize`, `initialize`, `afterInitialize`]
+    private AUTOLOAD_HOOKS = [
+        `beforeInitialize`,
+        `initialize`,
+        `afterInitialize`
+    ]
 
     koa = new Koa()
     router = new KoaRouter()
@@ -28,7 +35,7 @@ export class App {
     // Set by components/database.ts
     sequelize!: Sequelize
 
-    loadedModules: any[] = []
+    private loadedModules: any[] = []
 
     constructor() {
         this.createServer()
@@ -46,6 +53,9 @@ export class App {
      * Create the Koa server and router
      */
     private createServer() {
+        this.koa.use(
+            koaMount('/public', koaStatic(path.join(__dirname, 'public')))
+        )
         this.koa.use(koaBody())
         this.koa.use(
             koaSession(
@@ -56,6 +66,9 @@ export class App {
                 },
                 this.koa
             )
+        )
+        this.koa.use(
+            koaViews(path.join(__dirname, 'views'), { extension: 'pug' })
         )
         this.koa.use(this.router.routes())
         this.koa.use(this.router.allowedMethods())
